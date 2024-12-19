@@ -57,5 +57,7 @@ uint8_t button_driver_get_event(void);
 
 void configure_gpio_for_usart(void);
 
+uint8_t gpio_get_door_led_state(void);
+
 #endif // GPIO_H
 

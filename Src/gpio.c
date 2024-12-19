@@ -2,7 +2,7 @@
 #include "gpio.h"
 
 #include "systick.h"
-#include "uart.h"
+#include <stdint.h>
 
 #define EXTI_BASE 0x40010400
 #define EXTI ((EXTI_t *)EXTI_BASE)
@@ -20,7 +20,7 @@
 #define GPIOC ((GPIO_t *)0x48000800) // Base address of GPIOC
 
 #define HEART_BEAT_LED_PIN 5 // Pin 5 of GPIOA
-#define DOOR_LED_PIN 6 // Pin 6 of GPIOA
+#define DOOR_LED_PIN 4 // Pin 6 of GPIOA
 
 #define DOOR_BUTTON       13  // Pin 13 of GPIOB
 
@@ -82,7 +82,7 @@ void configure_gpio_for_usart(void)
 void configure_gpio(void)
 {
 
-        *RCC_AHB2ENR |= (1 << 0) | (1 << 1); // Enable clock for GPIOA and GPIOB
+    *RCC_AHB2ENR |= (1 << 0) | (1 << 1); // Enable clock for GPIOA and GPIOC
 
     // Enable clock for SYSCFG
     *RCC_APB2ENR |= (1 << 0); // RCC_APB2ENR_SYSCFGEN
@@ -102,10 +102,14 @@ void configure_gpio(void)
 // Emula el comprtamiento de la puerta
 void gpio_set_door_led_state(uint8_t state) {
     if (state) {
-        GPIOA->ODR |= (1 << 4); // encender LED estado puerta
+        GPIOA->ODR |= (1 << DOOR_LED_PIN); // encender LED estado puerta
     } else {
-        GPIOA->ODR &= ~(1 << 4); // apagar LED estado puerta
+        GPIOA->ODR &= ~(1 << DOOR_LED_PIN); // apagar LED estado puerta
     }
+}
+
+uint8_t gpio_get_door_led_state(void) {
+    return GPIOA->ODR & (1 << DOOR_LED_PIN); // encender LED estado puerta
 }
 
 void gpio_toggle_heartbeat_led(void) {
@@ -115,7 +119,9 @@ void gpio_toggle_heartbeat_led(void) {
 volatile uint8_t button_pressed = 0; // Flag to indicate button press
 uint8_t button_driver_get_event(void)
 {
-    return button_pressed;
+    uint8_t _temp=button_pressed;
+    button_pressed=0;
+    return _temp;
 }
 
 uint32_t b1_tick = 0;
@@ -123,11 +129,9 @@ void detect_button_press(void)
 {
     if (systick_GetTick() - b1_tick < 50) {
         return; // Ignore bounces of less than 50 ms
-    } else if (systick_GetTick() - b1_tick > 500) {
-        usart2_send_string("Button Pressed!\r\n");
+    } else if (systick_GetTick() - b1_tick > 5000) {
         button_pressed = 1; // single press
     } else {
-        usart2_send_string("Button Pressedx2!\r\n");
         button_pressed = 2; // double press
     }
 
