@@ -1,7 +1,8 @@
-#include "gpio.h"
 #include "rcc.h"
+#include "gpio.h"
 
 #include "systick.h"
+#include "uart.h"
 
 #define EXTI_BASE 0x40010400
 #define EXTI ((EXTI_t *)EXTI_BASE)
@@ -15,10 +16,39 @@
 
 
 #define GPIOA ((GPIO_t *)0x48000000) // Base address of GPIOA
+#define GPIOB ((GPIO_t *)0x48000400) // Base address of GPIOA
 #define GPIOC ((GPIO_t *)0x48000800) // Base address of GPIOC
 
-#define LED_PIN 5 // Pin 5 of GPIOA
-#define BUTTON_PIN 13 // Pin 13 of GPIOC
+#define HEART_BEAT_LED_PIN 5 // Pin 5 of GPIOA
+#define DOOR_LED_PIN 6 // Pin 6 of GPIOA
+
+#define DOOR_BUTTON       13  // Pin 13 of GPIOB
+
+void init_gpio_pin(GPIO_t *GPIOx, uint8_t pin, uint8_t mode)
+{
+    GPIOx->MODER &= ~(0x3 << (pin * 2)); // Clear MODER bits for this pin
+    GPIOx->MODER |= (mode << (pin * 2)); // Set MODER bits for this pin
+}
+
+void configure_interrupt(GPIO_t *GPIOx, int PIN) {
+    int EXTICR_idx = (PIN/4);
+    int EXTICR_offset = PIN%4;
+    // Configure SYSCFG EXTICR to map EXTIX to PxX
+    SYSCFG->EXTICR[EXTICR_idx] &= ~(0xF << 4* EXTICR_offset); // Clear bits for EXTI13
+    SYSCFG->EXTICR[EXTICR_idx] |= ((int )(GPIOx-GPIOA)/400 << 4*EXTICR_offset);  // Map EXTI13 to Port B
+
+    // Configure EXTI13 for falling edge trigger
+    EXTI->FTSR1 |= (1 << PIN);  // Enable falling trigger
+    EXTI->RTSR1 &= ~(1 << PIN); // Disable rising trigger
+
+    // Unmask EXTI13
+    EXTI->IMR1 |= (1 << PIN);
+
+    // Configure PA2 and PA3 as no pull-up, no pull-down
+    GPIOx->PUPDR |= (1 << (PIN * 2)); // No pull-up, no pull-down for PA2
+    init_gpio_pin(GPIOx, PIN, 0x0); // Set BUTTON pin as input
+
+}
 
 
 void configure_gpio_for_usart(void)
@@ -49,11 +79,24 @@ void configure_gpio_for_usart(void)
     GPIOA->PUPDR &= ~(3U << (3 * 2)); // No pull-up, no pull-down for PA3
 }
 
-
 void configure_gpio(void)
 {
 
-    
+        *RCC_AHB2ENR |= (1 << 0) | (1 << 1); // Enable clock for GPIOA and GPIOB
+
+    // Enable clock for SYSCFG
+    *RCC_APB2ENR |= (1 << 0); // RCC_APB2ENR_SYSCFGEN
+
+
+    init_gpio_pin(GPIOA, HEART_BEAT_LED_PIN, 0x1); // Set LED pin as output
+    init_gpio_pin(GPIOA, DOOR_LED_PIN, 0x1); // Set LED pin as output
+
+    configure_interrupt(GPIOB, DOOR_BUTTON);
+
+    // Enable EXTI15_10 interrupt
+    *NVIC_ISER1 |= (1 << (EXTI15_10_IRQn - 32));
+
+    configure_gpio_for_usart();
 }
 
 // Emula el comprtamiento de la puerta
@@ -81,8 +124,10 @@ void detect_button_press(void)
     if (systick_GetTick() - b1_tick < 50) {
         return; // Ignore bounces of less than 50 ms
     } else if (systick_GetTick() - b1_tick > 500) {
+        usart2_send_string("Button Pressed!\r\n");
         button_pressed = 1; // single press
     } else {
+        usart2_send_string("Button Pressedx2!\r\n");
         button_pressed = 2; // double press
     }
 
@@ -91,8 +136,8 @@ void detect_button_press(void)
 
 void EXTI15_10_IRQHandler(void)
 {
-    if (EXTI->PR1 & (1 << BUTTON_PIN)) {
-        EXTI->PR1 = (1 << BUTTON_PIN); // Clear pending bit
+    if (EXTI->PR1 & (1 << DOOR_BUTTON)) {
+        EXTI->PR1 = (1 << DOOR_BUTTON); // Clear pending bit
         detect_button_press();
     }
 }

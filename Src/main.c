@@ -1,5 +1,5 @@
 // Access Control System Implementation
-
+#include "stdint.h"
 #include "gpio.h"
 #include "systick.h"
 #include "uart.h"
