@@ -2,8 +2,9 @@
 #include "rcc.h"
 #include "nvic.h"
 #include "gpio.h"
+#include <stdint.h>
 
-static volatile command_t last_command = CMD_NONE;
+static volatile uint32_t last_command;
 
 void usart2_init(void)
 {
@@ -69,9 +70,9 @@ void USART2_IRQHandler(void)
     if (isr & USART_ISR_RXNE) {
         char command = USART2->RDR;
         if (command == 'O') {
-            last_command = CMD_OPEN;
+            last_command = 'O';
         } else if (command == 'C') {
-            last_command = CMD_CLOSE;
+            last_command = 'C';
         }
     }
 }
