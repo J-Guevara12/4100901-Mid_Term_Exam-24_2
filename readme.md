@@ -2,6 +2,14 @@
 
 Este README describe un sistema de control de acceso simplificado implementado en una placa STM32 Nucleo. El sistema emula un mecanismo de puerta segura con indicaciones básicas, eventos de entrada y capacidades de control/monitoreo remoto vía UART.
 
+## Pines relevantes:
+
+| PIN  | Función          | Conexión                                |
+|------|------------------|-----------------------------------------|
+| PA5  | LED de hearhbeat | Led por defecto en la STM32L476RG       |
+| PA4  | LED de Estado    | resistencia 100Ω -> LED amarillo -> GND |
+| PB13 | Boton de control | boton pulsador -> GND                   |
+
 ## Recursos de Hardware
 
 - **LED de Latido (Heartbeat)**: Un LED dedicado que parpadea periódicamente (cada 500 ms) para indicar que el sistema está funcionando correctamente.
