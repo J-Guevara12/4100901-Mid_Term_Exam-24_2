@@ -65,6 +65,9 @@ Este README describe un sistema de control de acceso simplificado implementado e
 
 ## Características de la documentación:
 - Cada función exportada en los archivos de headers está documentada en  funcionalidad, entrada y salida.
+- Los docstrings siguen el formato de C que es compatible con motores de autocompletado como CLANGD:
+![Muestra de la documentación](images/docs.png "Muestra de la documentación")
+![Autocompletado](images/autocomplete.png "Autocompletado")
 - Se añaden diagramas de flujo para ilustrar el funcionamiento del sistema.
 - Se complementan tablas de información de los pines para facilitar la conexión de los periféricos.
 - Uso continuo de commits de estilo angular para facilitar la integración con herramientas de CI/CD.
