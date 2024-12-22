@@ -54,10 +54,27 @@ typedef enum {
     CMD_CLOSE
 } command_t;
 
+/**
+ * @brief Inicializa el periférico USART2 para transmisión a 9600 baudios.
+ *
+ * @param[void] void Esta función no recibe entradas.
+ */
 void usart2_init(void);
+
+/**
+ * @brief Envía una cadena a través del UART2.
+ *
+ * @param[* char] str Cadena a enviar a través de UART.
+ */
 void usart2_send_string(const char *str);
 
 // Función para obtener el último comando recibido (no bloqueante)
+/**
+ * @brief Retorna el comando más reciente si es 'C' u 'O'.
+ *
+ * @param[void] void Esta función no recibe entradas
+ * @return Comando más reciente ['C': close, 'O': Open temporarily]
+ */
 command_t usart2_get_command(void);
 
 #endif // UART_H
