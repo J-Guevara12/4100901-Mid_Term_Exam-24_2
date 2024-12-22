@@ -67,3 +67,4 @@ Este README describe un sistema de control de acceso simplificado implementado e
 - Cada función exportada en los archivos de headers está documentada en  funcionalidad, entrada y salida.
 - Se añaden diagramas de flujo para ilustrar el funcionamiento del sistema.
 - Se complementan tablas de información de los pines para facilitar la conexión de los periféricos.
+- Uso continuo de commits de estilo angular para facilitar la integración con herramientas de CI/CD.
